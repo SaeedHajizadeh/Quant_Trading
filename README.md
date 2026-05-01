@@ -39,7 +39,6 @@ derivatives, and low-latency trading systems.
 ## Repository Structure
 
 - `notes/` — Topic-by-topic learning notes with example code
-- `exercises/` — Small problems and language drills
 - `projects/` — Standalone projects, each with its own build system and tests
 - `benchmarks/` — Performance experiments and microbenchmarks
 
