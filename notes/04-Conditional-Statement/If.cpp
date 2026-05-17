@@ -3,17 +3,17 @@
 
 int main(){
     std::string name;
-    std::cout << "Enter your fiancee's name: " << std::endl;
+    std::cout << "Enter your best friend's name: " << std::endl;
     std::cin >> name;
 
-    if (name == "Razan"){
-        std::cout << "Congratulations! You are going to marry Razan!" << std::endl;
+    if (name == "Amir"){
+        std::cout << "Congratulations! Amir is your best friend!" << std::endl;
     }
-    else if (name == "Razouneh"){
-        std::cout << "Congratulations! You are going to marry Razouneh!" << std::endl;
+    else if (name == "Amir Masoud"){
+        std::cout << "Congratulations! Amir Masoud is your best friend!" << std::endl;
     }
     else {
-        std::cout << "Shame one you! How can you forget your fiancee's name?!" << std::endl;
+        std::cout << "Shame one you! How can you forget your best friend's name?!" << std::endl;
     }
 
 
