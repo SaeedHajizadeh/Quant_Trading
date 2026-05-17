@@ -1,3 +1,4 @@
+#include "vector_algos.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -36,20 +37,6 @@ int sum(std::vector<int> v){
     return total;
 }
 
-// Define a function that given a vector, returns the average of its elements
-double average(std::vector<int> v){
-    double total = 0;
-    if (v.empty()){
-        std::cout << "The vector is empty! Cannot calculate the average." << std::endl;
-        return 0; // throw and exception instead of returning 0
-    }
-
-    for (int num : v){
-        total += num;
-    }
-
-    return total / v.size();
-}
 
 
 
@@ -64,22 +51,4 @@ std::vector<int> greater_than(std::vector<int> v , int x){
     }
 
     return result;
-}
-
-
-int main(){
-    std::vector<int> v = read_into_vector();
-    std::cout << "You entered the following integers: ";
-    for (int num : v){
-        std::cout << num << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "The average is " << average(v) << std::endl;
-    std::cout << "The following integers are greater than 5: ";
-    std::vector<int> greater_than_5 = greater_than(v , 5);
-    for (std::size_t i = 0 ; i < greater_than_5.size(); ++i){
-        std::cout << greater_than_5[i] << " ";
-    }
-    std::cout << std::endl;
-    return 0;
 }
