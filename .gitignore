@@ -4,6 +4,7 @@
 *.exe
 *.out
 a.out
+main
 
 # Build directories
 build/
@@ -14,7 +15,6 @@ cmake-build-*/
 .idea/
 *.swp
 *~
-
 # OS files
 .DS_Store
 Thumbs.db
