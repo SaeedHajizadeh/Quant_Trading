@@ -144,5 +144,15 @@ int main() {
     bool is_all_positive = std::all_of(result.begin() , result.end() , is_positive);
     std::cout << "Are all elements of result positive ? " << is_all_positive << std::endl;
 
+
+    // Now let us say we want to define a function that receives a begin iterator and an end
+    // iterator and display everything in the range
+    void display_range(std::vector<int>::const_iterator begin,
+                       std::vector<int>::const_iterator end) {
+        std::cout << "{ ";
+        std::copy(begin , end , std::ostream_iterator<int>{std::cout , " "});
+        std::cout << "}"; 
+                        }
+
     return 0;
 }

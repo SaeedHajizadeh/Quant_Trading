@@ -57,5 +57,19 @@ static bool is_positive(int x){
 }
 
 
-    
+bool all_positive(std::vector<int> const& v) {
+    // all_of returns true for an empty range — a useful convention, since it
+    // means every subrange of a "true" range is also "true".
+    return std::all_of(v.begin(), v.end(), is_positive);
+}
+
+
+// Now let us say we want to define a function that receives a begin iterator and an end
+// iterator and display everything in the range
+void display_range(std::vector<int>::const_iterator begin,
+                    std::vector<int>::const_iterator end) {
+    std::cout << "{ ";
+    std::copy(begin , end , std::ostream_iterator<int>{std::cout , " "});
+    std::cout << "}"; 
+    }
 
