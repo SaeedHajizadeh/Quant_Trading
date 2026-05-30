@@ -8,6 +8,7 @@
 // Here we teach the prerequisites of functions in vector_algos.cpp of this chapter
 
 
+
 int main() {
     // We start off by std::copy --> std::copy is a C++ Standard Library algorithm in <algorithm>
     // It copies elements from a source range to a destination range 
@@ -145,14 +146,28 @@ int main() {
     std::cout << "Are all elements of result positive ? " << is_all_positive << std::endl;
 
 
-    // Now let us say we want to define a function that receives a begin iterator and an end
-    // iterator and display everything in the range
-    void display_range(std::vector<int>::const_iterator begin,
-                       std::vector<int>::const_iterator end) {
-        std::cout << "{ ";
-        std::copy(begin , end , std::ostream_iterator<int>{std::cout , " "});
-        std::cout << "}"; 
-                        }
 
+
+
+    // std::max_element is a built-in C++ STL algorithm that finds the largest element in the
+    // range [first , last). Instead of return the value itself, it returns the iterator pointing
+    // to the maximum element. In order to get the maximum element itself, we need to dereference
+    // Header is <algorithm>; It returns the iterator to the FIRST occurrence of a maximum
+
+    std::vector<int> numbers = {3 , 1 , -9 , 5 , 2 , 9};
+
+    // find the iterator to the largest element
+    auto max_it = std::max_element(numbers.begin() , numbers.end());
+    
+
+    if (max_it != numbers.end()){
+        std::cout << "Max value is " << *max_it << std::endl;
+        std::cout << "First occurence index is " << std::distance(numbers.begin() , max_it) << "\n";
+    }
+
+
+    
+
+    
     return 0;
 }
