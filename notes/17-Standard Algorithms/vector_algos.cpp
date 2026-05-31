@@ -73,3 +73,17 @@ void display_range(std::vector<int>::const_iterator begin,
     std::cout << "}"; 
     }
 
+
+// // To understand std::ostream_iterator, note the above code is equivalent to 
+// void display_range(std::vector<int>::const_iterator begin,
+//                     std::vector<int>::const_iterator end) {
+//     std::cout << "{ ";
+//     while (begin != end){
+//         std::cout << *begin << " ";
+//         ++begin;
+//     } 
+//     std::cout << "}";
+//     }
+
+
+    

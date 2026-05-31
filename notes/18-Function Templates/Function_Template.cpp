@@ -61,6 +61,8 @@
 // add another typename in our template parameter declaration
 #include <iostream>
 template <typename T , typename U>
+// Notice the return type is auto so compiler deduces the return type sp that max(1 , 2.33)
+// is not 2
 auto max(T x , U y){
     return (x > y) ? x : y;
 }
