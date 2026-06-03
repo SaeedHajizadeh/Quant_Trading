@@ -157,15 +157,20 @@ bool all_positive(std::vector<T> const& v) {
 // we have a vector of type std::vector<int> v then the input iterators v.begin() and v.end() will be of type
 // std::vector<int>::const_iterator and the element type will be int and so for instance v.begin()::value_type 
 // will be int. Let's say the iterator input, named InputIt, is of type std::vector<T>::const_iterator. 
-// Then InputIt::value_type will be T. So we can write the function template as follows:
+// Then InputIt::value_type will be T. 
+
+// We are almost there. The only problem is that the compiler can't tell at parse time whether InputIt::value_type names a type or a value.
+
+// Suppose InputIt is actually std::vector<int>::const_iterator. Then InputIt::value_type is int (or more precisely std::vector<int>::const_iterator::value_type is int)) 
+// so we can simply write std::ostream_iterator<InputIt::value_type> to create an ostream_iterator of the correct type. 
+// However, the compiler can't tell at parse time whether InputIt::value_type names a type or a value.
+// This is a common issue in C++ templates, and the solution is to use the typename keyword to tell the compiler that it is a type. 
+// So we write typename InputIt::value_type to tell the compiler that it is a type. Then we can use this type to create an ostream_iterator of the correct type.
 
 
 template <typename InputIt>
 void display_range(InputIt begin , InputIt end) {
     // Extract the element type from the container automatically using the value_type typedef in the iterator
-    // InputIt::value_type depends on the template parameter, so the compiler
-    // can't tell at parse time whether it names a type or a value. This is a common issue in C++ templates, 
-    // and the solution is to use the typename keyword to tell the compiler that it is a type.
     using T = typename InputIt::value_type;  
     std::cout << "{ ";
     std::copy(begin , end , std::ostream_iterator<T>{std::cout , " "});
@@ -173,5 +178,45 @@ void display_range(InputIt begin , InputIt end) {
 }
 
 
+// We can generalize all the sort-related functions now. They all use random access iterators, so let's call them RandomIt
+template <typename RandomIt>
+RandomIt partition(RandomIt begin , RandomIt end);
+
+template <typename RandomIt>
+void quicksort_impl(RandomIt begin , RandomIt end);
+
+// Why not make sort work on any container, not just vectors?  Any container that has a begin() and end() and supports
+// random access iterators can be sorted with std::sort, so we can write a template that takes any container and sorts it.
+template <typename Container>
+Container sort(Container c) {
+    quicksort_impl(c.begin() , c.end());
+    return c;
+}
+
+template <typename RandomIt>
+void quicksort_impl(RandomIt begin , RandomIt end) {
+    if (end - begin <= 1) return; // Base case: 0 or 1 element is already sorted
+
+    // Use of auto means we can leave more code unchanged.
+    auto pivot = partition(begin , end);
+    quicksort_impl(begin , pivot);
+    quicksort_impl(pivot + 1 , end);
+}
+
+
+template <typename RandomIt>
+RandomIt partition(RandomIt begin , RandomIt end) {
+    // we use begin++: since we put the ++ after begin, the value of begin is the original first element,
+    // which is assigned to the pivot, and then the compiler increments begin to point to the second element. 
+    // If we had written ++begin, then begin would have been incremented before being assigned to pivot, 
+    //and pivot would have been the second element instead of the first.
+    auto pivot = begin++; // Choose the first element as the pivot and move begin to the next element
+    for (; begin != end; ++begin) {
+        if (*begin < *pivot) {
+            std::swap(*begin , *pivot); // Swap the current element with the pivot
+            ++pivot; // Move the pivot to the next position
+        }
+    }
+}
 
 #endif
