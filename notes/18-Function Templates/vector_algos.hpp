@@ -116,13 +116,62 @@ bool all_positive(std::vector<T> const& v) {
 }
 
 
-// Instead of generalizing int and taking std::vector<T>::const_iterator, let's
-// allow any kind of iterator. std::copy requires an input iterator to read from
-// so we'll call the type parameter InputIt; this is fairly common. This is purely
-// for people reading our code and the compiler does not care what we call it. 
+// // Reminder on std::ostream_iterator: it is a Standard Library iterator adapter that 
+// // converts output stream (such as std::cout) into functional output. This allows 
+// // standard algorithms--such as std::copy--to stream data directly to a console or file
+// // or a string buffer rather than copying it to a container. It is contained in <iterator>
+// // and the syntax is: std::ostream_iterator<Type> iterator_name(output_stream , delimiter_string);
+// // Type: The data type of the elements you want to print (e.g., int, std::string). The type must support the << operator. 
+// // output_stream: The stream destination, such as std::cout
+// // delimiter (Optional): A null-terminated character string (like " " or ", ") printed automatically after every element.
+// // Example
+// #include <iostream>
+// #include <iterator>
+// #include <vector>
+// #include <algorithm>
+
+// int main() {
+//     std::vector<int> numbers{10, 20, 30, 40, 50};
+    
+//     // Create an iterator targetting std::cout with a space as a delimiter
+//     std::ostream_iterator<int> out_it(std::cout, " ");
+
+//     // Copy the contents of the vector directly to the console
+//     std::copy(numbers.begin() , numbers.end() , out_it);
+//     return 0;
+// }
+
+
+
+
+// In order to generalize display_range, we need to generalize the type of the iterators
+// as well as the type of the elements (int -> T). If the vector is of type std::vector<int>
+// then the iterators will be of type std::vector<int>::const_iterator and 
+// std::vector<int>::const_iterator::value_type will be int. If the vector is of type std::vector<std::string>
+// then the iterators will be of type std::vector<std::string>::const_iterator and
+// std::vector<std::string>::const_iterator::value_type will be std::string. More generally, 
+// if the vector is of type std::vector<T> then the iterators will be of type std::vector<T>::const_iterator and
+// std::vector<T>::const_iterator::value_type will be T. So we can use the value_type typedef in the iterator 
+// to extract the element type from the container automatically. Therefore, we can use the input iterators of
+// the container as the template parameter and extract the element type from the iterator. For example, if 
+// we have a vector of type std::vector<int> v then the input iterators v.begin() and v.end() will be of type
+// std::vector<int>::const_iterator and the element type will be int and so for instance v.begin()::value_type 
+// will be int. Let's say the iterator input, named InputIt, is of type std::vector<T>::const_iterator. 
+// Then InputIt::value_type will be T. So we can write the function template as follows:
+
+
 template <typename InputIt>
 void display_range(InputIt begin , InputIt end) {
-
+    // Extract the element type from the container automatically using the value_type typedef in the iterator
+    // InputIt::value_type depends on the template parameter, so the compiler
+    // can't tell at parse time whether it names a type or a value. This is a common issue in C++ templates, 
+    // and the solution is to use the typename keyword to tell the compiler that it is a type.
+    using T = typename InputIt::value_type;  
+    std::cout << "{ ";
+    std::copy(begin , end , std::ostream_iterator<T>{std::cout , " "});
+    std::cout << "}\n";
 }
+
+
 
 #endif
