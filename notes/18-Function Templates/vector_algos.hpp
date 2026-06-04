@@ -25,16 +25,16 @@
 
 template <typename T>
 std::vector<T> read_vector(std::istream& stream = std::cin) {
-    std::vector<T> = result;
+    std::vector<T> result;
 
     while (true) {
-        std::copy(std::stream_iterator<T>{stream} ,
+        std::copy(std::istream_iterator<T>{stream} ,
         std::istream_iterator<T>{},
-        std::back_insertor(result));
+        std::back_inserter(result));
 
         if (stream.eof()) break;
 
-        stream.clear()
+        stream.clear();
         std::string bad_line;
         std::getline(stream , bad_line);
         std::cerr << "Warning, ignoring" << bad_line << "\n";
@@ -49,7 +49,7 @@ std::vector<T> read_vector(std::istream& stream = std::cin) {
 
 template <typename T>
 T sum(std::vector<T> const& v){
-    return std::accumulate(v.begin() , v.end() , T{})
+    return std::accumulate(v.begin() , v.end() , T{});
 }
 
 /* By the way, what if we pass the template a type that doesn't make any sense?
@@ -112,7 +112,7 @@ template <typename T>
 bool all_positive(std::vector<T> const& v) {
     // is_positive itself is a template -- we write is_positive<T> to tell the
     // compiler which instantiation to pass as the predicate
-    return std::all_of(v.begin() , v.end() , is_positive<T>)
+    return std::all_of(v.begin() , v.end() , is_positive<T>);
 }
 
 
@@ -217,6 +217,31 @@ RandomIt partition(RandomIt begin , RandomIt end) {
             ++pivot; // Move the pivot to the next position
         }
     }
+    return pivot;
 }
+
+template <typename T>
+// Up to this point, T is unknown, so we can't write std::vector<T>::const_iterator as the return type. 
+// We can only write it after we know what T is. SO
+typename std::vector<T>::const_iterator              // This line says to the compiler: "Trust me, I know that T is a type so std::vector<T>::const_iterator is a valid type, and that's the return type of this function."
+binary_search(std::vector<T> const& v , T const& val){
+    auto bottom = v.begin() , top = v.end();
+
+    while (top != bottom) {
+        auto mid = bottom + (top - bottom)/2;
+        if (*mid < val)
+            bottom = mid + 1;
+        else if (*mid > val)
+            top = mid;
+        else
+            return mid;
+    }
+}
+
+
+
+
+
+
 
 #endif
