@@ -58,6 +58,7 @@ int main() {
 // 2. Otherwise, the member is copy-initialized from an empty initializer list. In most
 //    cases this will be a value-initialization (e.g. 0.0 for double)
 
+/*
 #include <iostream>
 struct Employee {
     int id {};
@@ -74,4 +75,147 @@ int main () {
     std::cout << "Saeed.whatever : " << Saeed.whatever;
     std::cout << " and Saeed.whatever2 is " << (Saeed.whatever2 ==  "") << std::endl;
     return 0;
+}
+*/
+
+
+
+// --------------------- Print struct with overloading operator<< -------------------
+// We have seen in previous chapters how to overload operator>> to print an enumeration
+// Here we overload operator<< to print a struct 
+/*
+#include <iostream>
+
+struct Employee {
+    int id {};
+    int age {};
+    double wage {};
+};
+
+std::ostream& operator<<(std::ostream& out , const Employee& e) {
+    out << e.id << " " << e.age  << " " <<  e.wage;
+    return out;
+}
+
+int main() {
+    Employee Saeed {2 , 28}; // wage will be initialized to 0.0
+    operator<<(std::cout ,  Saeed) << std::endl;
+}
+*/
+
+
+
+
+// ---------------------- Const structs ------------------------------------
+// Variables of struct type can be const (or constexpr) just like any other type
+// Let's say we want to write a program that receives two rectangles and outputs
+// whether there is exactly one ellipse that circumscribes one and is inscribed inside
+// the other. In such situations, we need to pass the rectangles as two constant inputs
+// Hence, using constant structs to represent these rectangles would be appropriate.
+
+
+/*
+struct Rectangle {
+    double length {};
+    double width {};
+};
+
+int main () {
+    const Rectangle unit {1.0 , 1.0};
+    const Rectangle zero { };
+    return 0;
+}
+*/
+
+
+// -------------------------------- Designated initializers ----------------------------------
+// When initializing a struct from a list of values, the initializers are applied to the members
+// in order of declaration.
+/*
+struct Foo
+{
+    int a {};
+    int c {};
+};
+
+int main()
+{
+    Foo f { 1, 3 }; // f.a = 1, f.c = 3
+
+    return 0;
+}
+*/
+
+// Now consider what would happen if you were to update this struct definition to add a new
+// member that is not the last member:
+
+/*
+struct Foo
+{
+    int a {};
+    int b {}; // just added
+    int c {};
+};
+
+int main()
+{
+    Foo f { 1, 3 }; // now, f.a = 1, f.b = 3, f.c = 0
+
+    return 0;
+}*/
+// Now all your initialization values have shifted, and worse, the compiler may not detect
+// this as an error (after all, the syntax is still valid).
+
+// **** Solution ***** : C++20 adds a new way to initialize struct members called
+//                       ******* designated initializers *******:
+// Designated initializers allow you to explcitly specify which initialization value maps to what
+// member. It can be a list ({.a {1} , etc etc}) or a copy ({.a = 1 , etc etc}) initialization
+
+/*
+struct Foo{
+    int a{};
+    int b{};
+    int c{};
+};
+
+int main() {
+    Foo f1{ .a { 1 } , .c { 3 }}; // ok: f1.a = 1, f1.b = 0 (value initialized), f1.c = 3
+    Foo f2{ .a = 1 , .c = 3};     // ok: f2.a = 1, f2.b = 0 (value initialized), f2.c = 3
+    Foo f3{ .b{ 2 }, .a{ 1 } };   // error: initialization order does not match order of 
+                                  // declaration in struct
+    return 0;
+}
+*/
+
+// Lastly, while designated initializers are nice, we do not recommend using them since
+// they easily clutter up the initializer list
+// ***** Best practice ******:
+// When adding a new member to an aggregate, it’s safest to add it to the bottom of the
+// definition list so the initializers for other members don’t shift. 
+
+// ---------------- Initialize a struct with another struct of the same type -------------------
+#include <iostream>
+
+struct Foo {
+    int a{};
+    int b{};
+    int c{};
+};
+
+std::ostream& operator<<(std::ostream& out , const Foo& f) {
+    out << f.a << " " << f.b << " " << f.c ;
+    return out;
+}
+
+int main() {
+    Foo f {1 , 2 , 3};
+
+    Foo f1 = f;  // copy-initialization
+    Foo f2(f);   // direct-initialization
+    Foo f3 {f};  // direct-list-initialization
+
+    std::cout << f1 << '\n';
+    std::cout << f2 << '\n';
+    std::cout << f3 << '\n';
+    return 0; 
 }
