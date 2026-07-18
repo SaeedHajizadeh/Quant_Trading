@@ -86,6 +86,7 @@ int main(){
 // Later, we discover that we also need pairs of double values. So we update our program
 // to the following:
 
+/*
 #include <iostream>
 
 struct Pair
@@ -121,6 +122,7 @@ int main()
     return 0;
 }
 
+*/
 
 
 // Unfortunately, this program won’t compile, and has a number of problems that need to be
