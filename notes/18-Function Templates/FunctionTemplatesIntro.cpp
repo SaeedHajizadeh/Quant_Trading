@@ -91,10 +91,12 @@ T max(T x , T y) {  // // won't compile because we haven't defined T
 // to the function template (or class template) that follows. Therefore, each function template
 // or class template needs its own template parameter declaration.
 
+/*
 template <typename T> // this is the template parameter declaration defining T
 T max(T x , T y){     // // this is the function template definition for max<T>
     return (x < y) ? y : x;
 }
+*/
 
 // ******** template parameter declaration **********
 // In our template parameter declaration, we start with the keyword template, which tells
@@ -108,3 +110,398 @@ T max(T x , T y){     // // this is the function template definition for max<T>
 // (e.g. x), it’s conventional to use a single capital letter (starting with T) when the
 // template parameter is used in a trivial or obvious way. 
 
+
+
+
+// ---------------------------- Function template instantiation ------------------------------
+// How do we use a function template we just defined?
+// Function templates are NOT actually functions; but their job is to generate functions that are
+// compiled and executed. To use the max<T> functio template we just defined, we make the 
+// following function call:
+
+/*
+max<actual_type>(arg1 , arg2);   // actual_type is some actual type like int or double
+*/
+// This looks a lot like a normal function call -- the primary difference is the addition
+// of the type in angled brackets (called a template argument), which specifies the actual
+// type that will be used in place of template type T.
+
+
+// A full example:
+
+/*
+#include <iostream>
+
+template <typename T>
+T max (T x , T y){
+    return (x < y) ? y : x;
+}
+
+int main(){
+    int x { 11 };
+    int y { -2 };
+
+    std::cout << max<int>(x , y) << '\n'; // instantiates and calls function max<int>(int, int)
+    return 0;
+}
+*/
+
+
+// ****************************************************************************************
+// When the compiler encounters the function call max<int>(1, 2), it will determine that a *
+// function definition for max<int>(int, int) does not already exist. Consequently, the    *
+// compiler will implicitly use our max<T> function template to create one.                *
+// ****************************************************************************************
+
+// The process of creating functions (with specific types) from function templates (with template
+// types) is called ***function template instantiation*** (or ***instantiation*** for short).
+// When a function is instantiated due to a function call, it’s called *implicit instantiation*.
+// A function that is instantiated from a template is technically called a ***specialization***,
+// but in common language is often called a *function instance*. The template from which a
+// specialization is produced is called a ***primary template***. Function instances are normal
+// functions in all regards.
+
+// The process for instantiating a function is simple: the compiler essentially clones the
+// primary template and replaces the template type (T) with the actual type we’ve specified (int).
+// So when we call max<int>(1, 2), the function specialization that gets instantiated looks
+// something like this:
+/*
+template<> // ignore this for now
+int max<int>(int x, int y) // the generated function max<int>(int, int)
+{
+    return (x < y) ? y : x;
+}
+*/
+
+
+// Whenever a function template for a particular type is called, the compiler instantiates the
+// template for that type and then that instantiation, being a normal function, is called.
+// Further calls to that particular type do not require re-instantiation. 
+
+/*
+#include <iostream>
+
+template <typename T>
+T max(T x, T y) // function template for max(T, T)
+{
+    return (x < y) ? y : x;
+}
+
+int main()
+{
+    std::cout << max<int>(1, 2) << '\n';    // instantiates and calls function max<int>(int, int)
+    std::cout << max<int>(4, 3) << '\n';    // calls already instantiated function max<int>(int, int)
+    std::cout << max<double>(1, 2) << '\n'; // instantiates and calls function max<double>(double, double)
+
+    return 0;
+}
+*/
+
+
+// Post all instantiations, the code snippet above looks like this
+/*
+#include <iostream>
+
+// a declaration for our function template (we don't need the definition any more)
+template <typename T>
+T max(T x, T y);
+
+template<>
+int max<int>(int x, int y) // the generated function max<int>(int, int)
+{
+    return (x < y) ? y : x;
+}
+
+template<>
+double max<double>(double x, double y) // the generated function max<double>(double, double)
+{
+    return (x < y) ? y : x;
+}
+
+int main()
+{
+    std::cout << max<int>(1, 2) << '\n';    // instantiates and calls function max<int>(int, int)
+    std::cout << max<int>(4, 3) << '\n';    // calls already instantiated function max<int>(int, int)
+    std::cout << max<double>(1, 2) << '\n'; // instantiates and calls function max<double>(double, double)
+
+    return 0;
+}
+*/
+
+
+
+// --------------------------- Template Argument Deduction -------------------------------
+// In most casse, the type we want to use to instantiate the template function with, match the
+// type of the function parameters we actually use. For example
+/*
+std::cout << max<int>(1, 2) << '\n'; // specifying we want to call max<int> and 1 and 2 are int
+*/
+
+// n cases where the type of the arguments match the actual type we want, we do not need to
+// specify the actual type -- instead, we can use ***template argument deduction*** to have
+// the compiler deduce the actual type that should be used from the argument types in the
+// function call.
+
+// For example, instead of
+/*
+std::cout << max<int>(1, 2) << '\n'; // specifying we want to call max<int>
+*/
+// we can use
+/*
+std::cout << max<>(1, 2) << '\n';
+std::cout << max(1, 2) << '\n';
+*/
+
+
+
+// The difference between the two cases has to do with how the compiler resolves the function
+// call from a set of overloaded functions. In the top case (with the empty angled brackets),
+// the compiler will only consider max<int> template function overloads when determining which
+// overloaded function to call. In the bottom case (with no angled brackets), the compiler will
+// consider both max<int> template function overloads and max non-template function overloads.
+// When the bottom case results in both a template function and a non-template function that are
+// equally viable, the non-template function will be preferred.
+
+
+/*
+#include <iostream>
+
+template <typename T>
+T max(T x, T y)
+{
+    std::cout << "called max<int>(int, int)\n";
+    return (x < y) ? y : x;
+}
+
+int max(int x, int y)
+{
+    std::cout << "called max(int, int)\n";
+    return (x < y) ? y : x;
+}
+
+int main()
+{
+    std::cout << max<int>(1, 2) << '\n'; // calls max<int>(int, int) directly
+    std::cout << max<>(1, 2) << '\n';    // deduces/instantiates max<int>(int, int) (non-template
+                                         // functions not considered)
+    std::cout << max(1, 2) << '\n';      // calls max(int, int)
+
+    return 0;
+}
+*/
+
+
+// The reason, in the last call, the compiler prefers the non-template function definition, i.e.
+// the one where types are determined in the definition overload (and not template) is that these
+// functions are more optimized in terms of implementation generally speaking. They could aslo
+// be more specialized. For example
+
+/*
+#include <iostream>
+
+// This function template can handle many types, so its implementation is generic
+template <typename T>
+void print(T x)
+{
+    std::cout << x; // print T however it normally prints
+}
+
+// This function only needs to consider how to print a bool, so it can specialize how it handles
+// printing of a bool
+void print(bool x)
+{
+    std::cout << std::boolalpha << x; // print bool as true or false, not 1 or 0
+}
+
+int main()
+{
+    print<bool>(true); // calls print<bool>(bool) -- prints 1
+    std::cout << '\n';
+
+    print<>(true);     // deduces print<bool>(bool) (non-template functions not considered) -- prints 1
+    std::cout << '\n';
+
+    print(true);       // calls print(bool) -- prints true
+    std::cout << '\n';
+
+    return 0;
+}
+*/
+
+
+
+// It’s possible to create function templates that have both template parameters and
+// non-template parameters. The type template parameters can be matched to any type, and the
+// non-template parameters work like the parameters of normal functions.
+
+// T is a type template parameter
+// double is a non-template parameter
+// We don't need to provide names for these parameters since they aren't used
+/*
+template <typename T>
+int someFcn(T, double)
+{
+    return 5;
+}
+
+int main()
+{
+    someFcn(1, 3.4); // matches someFcn(int, double)
+    someFcn(1, 3.4f); // matches someFcn(int, double) -- the float is promoted to a double
+    someFcn(1.2, 3.4); // matches someFcn(double, double)
+    someFcn(1.2f, 3.4); // matches someFcn(float, double)
+    someFcn(1.2f, 3.4f); // matches someFcn(float, double) -- the float is promoted to a double
+
+    return 0;
+}
+*/
+
+// ---------- Function templates and defulat arguments for nontemplate parameters ---------
+
+/*
+#include <iostream>
+
+template <typename T>
+void print(T val , int times = 1){
+    while (times--)         // (times--) gets processed AND after that times = times - 1 
+        std:: cout << val << " ";
+}
+
+int main(){
+    double x { 3.9 };
+    int times = 15;
+    char c { 'W' };
+
+    print(x , times);
+    print("\n");
+    print(c , times - 10);
+    std::cout << std::endl;
+
+    return 0;
+}
+*/
+
+
+
+
+// =================================== Static local variables ===================================
+
+// A static local variable is a variable declared inside a function that retains its value
+// between different function calls. Unlike regular local variables that are destroyed each
+// time a function exits, a static local variable persists for the program's entire lifetime
+// but remains hidden outside its function's scope.
+
+// Example: In C or C++, a function can use a static variable to count how many times it
+// has been called
+
+/*
+#include <stdio.h>
+void trackCalls() {
+    static int callCount = 0; // Initialized to 0 only on the first call
+    callCount++;
+
+    printf("Function is called %d times\n" , callCount);
+
+}
+
+int main() {
+    trackCalls(); // Output: Function called 1 times
+    trackCalls(); // Output: Function called 2 times
+    trackCalls(); // Output: Function called 3 times
+
+    return 0;
+}
+
+*/
+
+// Initialization: callCount = 0 only happens during the very first time trackCalls() runs. The
+//                 reason is the compiler handles static variables differently than regular 
+//                 local variables.
+// Persistence:    Every subsequent time the function is called, the line is skipped, and
+//                 callCount resumes exactly where it left off.
+// Scope:          Even though callCount persists throughout the program, you cannot access
+//                 or modify it from main() or any other function.
+
+
+// Here is how it works behind the scene:
+/*
+1. Dedicated Memory Allocation
+
+Regular local variables are created on the stack and get destroyed
+when the function exits. Static local variables are stored in the data segment (global memory).
+This memory area persists for the entire lifetime of the program.
+
+2. One-Time Initialization
+
+The line static int callCount = 0; is executed only once, when the program first loads or when
+the function is hit for the very first time.On all subsequent function calls, the runtime
+environment skips the initialization line entirely.Instead, the function immediately executes
+the next line, looking up the existing value already sitting in that permanent memory slot.
+*/
+// ==============================================================================================
+
+
+// ------- Beware function templates with modifiable static local variables --------
+
+// When a static local variable is used in a function template, each function instantiated
+// from that template will have a separate version of the static local variable. This is
+// rarely a problem if the static local variable is const. But if the static local variable
+// is one that is modified, the results may not be as expected.
+
+#include <iostream>
+
+// Here's a function template with a static local variable that is modified
+template <typename T>
+void printIDAndValue(T value)
+{
+    static int id{ 0 };
+    std::cout << ++id << ") " << value << '\n';
+}
+
+int main()
+{
+    printIDAndValue(12);
+    printIDAndValue(13);
+
+    printIDAndValue(14.5);
+
+    return 0;
+}
+
+// result: 1) 12
+//         2) 13
+//         1) 14.5
+
+// You may have been expecting the last line to print 3) 14.5. However, this is what the
+// compiler actually compiles and executes:
+
+/*
+#include <iostream>
+
+template <typename T>
+void printIDAndValue(T value);
+
+template <>
+void printIDAndValue<int>(int value)
+{
+    static int id{ 0 };
+    std::cout << ++id << ") " << value << '\n';
+}
+
+template <>
+void printIDAndValue<double>(double value)
+{
+    static int id{ 0 };
+    std::cout << ++id << ") " << value << '\n';
+}
+
+int main()
+{
+    printIDAndValue(12);   // calls printIDAndValue<int>()
+    printIDAndValue(13);   // calls printIDAndValue<int>()
+
+    printIDAndValue(14.5); // calls printIDAndValue<double>()
+
+    return 0;
+}
+*/
