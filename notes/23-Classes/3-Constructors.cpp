@@ -579,6 +579,7 @@ public:
 // (and cannot recover). Other solutions
 
 
+/*
 #include <iostream>
 
 class Ball{
@@ -616,3 +617,188 @@ int main()
 	return 0;
 }
 
+
+*/
+
+
+// --------------------------------------------------------------------------------------------
+// --------------------------------- Temporary class objects ----------------------------------
+// --------------------------------------------------------------------------------------------
+// Consider the following program:
+/*
+#include <iostream>
+
+int add(int x, int y)
+{
+    int sum{ x + y }; // stores x + y in a variable
+    return sum;       // returns value of that variable
+}
+
+int main()
+{
+    std::cout << add(5, 3) << '\n';
+
+    return 0;
+}
+*/
+
+
+// In order to save computation, we can actually simply return "sum" in the function. The
+// computational and spatial overhead of defining sum and then using it is not needed when we
+// are going to use that variable once. We can simply write:
+/*
+#include <iostream>
+
+int add(int x, int y)
+{
+    return x + y; // just return x + y directly
+}
+
+int main()
+{
+    std::cout << add(5, 3) << '\n';
+
+    return 0;
+}
+*/
+
+
+// This keeps the code cleaner. Do note that this only works in cases where an rvalue
+// expression is accepted. In cases where an lvalue expression is required, we must have
+// an object:
+/*
+#include <iostream>
+
+void addOne(int& value) // pass by non-const references requires lvalue
+{
+    ++value;
+}
+
+int main()
+{
+    int sum { 5 + 3 };
+    addOne(sum);   // okay, sum is an lvalue
+
+    addOne(5 + 3); // compile error: not an lvalue
+
+    return 0;
+}
+*/
+
+
+
+// --------------------------------- Temporary class objects ----------------------------------
+// These temporary objects could be of a basic type like int or std::string, or of compound
+// type, or of a class type, like below:
+/*
+#include <iostream>
+
+class IntPair
+{
+    private:
+        int m_x {};
+        int m_y {};
+
+    public:
+        IntPair(int x , int y)
+        : m_x { x } , m_y { y }
+        {}
+
+        int x() const { return m_x; }
+        int y() const { return m_y; }
+};
+
+
+void print(IntPair p)
+{
+    std::cout << "(" << p.x() << ", " << p.y() << ")\n";
+}
+
+
+
+int main()
+{
+    // Case 1: Pass variable
+    IntPair p { 3, 4 };
+    print(p); // prints (3, 4)
+
+    return 0;
+}
+*/
+
+
+
+// In case 1, we’re instantiating variable IntPair p and then passing p to function print().
+
+// However, p is only used once, and function print() will accept rvalues, so there is really
+// no reason to define a variable here. So let’s get rid of p.
+
+// We can do that by passing a *temporary object* instead of a named variable. A
+// *temporary object* (sometimes called an *anonymous object* or an *unnamed object*) is an
+// object that has no name and exists only for the duration of a single expression.
+
+// There are two ways to create a temporary class object
+/*
+#include <iostream>
+
+class IntPair
+{
+private:
+    int m_x{};
+    int m_y{};
+
+public:
+    IntPair(int x, int y)
+        : m_x { x }, m_y { y }
+    {}
+
+    int x() const { return m_x; }
+    int y() const{ return m_y; }
+};
+
+void print(IntPair p)
+{
+    std::cout << "(" << p.x() << ", " << p.y() << ")\n";
+}
+
+int main()
+{
+    // Case 1: Pass variable
+    IntPair p { 3, 4 };
+    print(p);
+
+    // Case 2: Construct temporary IntPair and pass to function
+    print(IntPair { 5, 6 } );
+
+    // Case 3: Implicitly convert { 7, 8 } to a temporary Intpair and pass to function
+    print( { 7, 8 } );
+
+    return 0;
+}
+*/
+
+
+
+// In case 2, we’re telling the compiler to construct an IntPair object, and initializing it
+// with { 5, 6 }. Because this object has no name, it is a temporary. The temporary object is
+// then passed to parameter p of function print(). When the function call returns, the
+// temporary object is destroyed.
+
+// In case 3, we’re also creating a temporary IntPair object to pass to function print().
+// However, because we have not explicitly specified what type to construct, the compiler
+// will deduce the necessary type (IntPair) from the function parameter, and then implicitly
+// convert { 7, 8 } to an IntPair object.
+
+
+// Another example
+/*
+std::string { "Hello" }; // create a temporary std::string initialized with "Hello"
+std::string {};          // create a temporary std::string using value initialization / default constructor
+*/
+
+
+// -----------------------------------------------------------------------------------------
+// ------------------- Converting constructors and the explicit keyword --------------------
+// -----------------------------------------------------------------------------------------
+
+// TBD
