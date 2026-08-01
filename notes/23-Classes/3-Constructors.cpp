@@ -801,4 +801,309 @@ std::string {};          // create a temporary std::string using value initializ
 // ------------------- Converting constructors and the explicit keyword --------------------
 // -----------------------------------------------------------------------------------------
 
-// TBD
+
+// Consider the following program
+/*
+#include <iostream>
+
+class Foo
+{
+private:
+    int m_x{};
+public:
+    Foo(int x)
+        : m_x{ x }
+    {
+    }
+
+    int getX() const { return m_x; }
+};
+
+void printFoo(Foo f) // has a Foo parameter
+{
+    std::cout << f.getX() << '\n';
+}
+
+int main()
+{
+    printFoo(5); // we're supplying an int argument but expecting an object of type Foo
+
+    return 0;
+}
+*/
+
+// In this version, printFoo has a Foo parameter but we’re passing in an argument of type int.
+// Fundamental type conversions such as int to double etc etc are automatically done by the
+// compiler. However, if one of the types are a program-defined type, such as a class type, we
+// need to define a function that handles the conversion for us. The compiler does not
+// automatically handle these cases. Such a function is called
+// *** user-defined conversion *** function. Since the code above successfully compiles, what
+// is the function that does the conversion? This function is the Foo function.
+
+// -------------------------- Converting constructors ------------------------------------
+// When we define a class, we're explicitly converting variables into our program-defined class
+// type. For example
+/*
+Foo x { 5 }; // Explicitly convert int value 5 to a Foo
+*/
+
+// Sometimes we do it implicitly
+// printFoo(5); // Implicitly convert int value 5 into a Foo
+
+// A constructor that can be used to perform an implicit conversion is called a
+// *** converting constructor ***. By default, all constructors are converting constructors.
+
+// ------------------- Only one user-defined conversion may be applied ---------------------
+/*
+#include <iostream>
+#include <string>
+#include <string_view>
+
+class Employee
+{
+private:
+    std::string m_name{};
+
+public:
+    Employee(std::string_view name)
+        : m_name{ name }
+    {
+    }
+
+    const std::string& getName() const { return m_name; }
+};
+
+void printEmployee(Employee e) // has an Employee parameter
+{
+    std::cout << e.getName();
+}
+
+int main()
+{
+    printEmployee("Joe"); // we're supplying an string literal argument
+
+    return 0;
+}
+*/
+
+// In this version, we’ve swapped out our Foo class for an Employee class. printEmployee has
+// an Employee parameter, and we’re passing in a C-style string literal. And we have a
+// converting constructor: Employee(std::string_view). The program above does not compile:
+
+// You might be surprised to find that this version doesn’t compile. The reason is simple:
+// only one user-defined conversion may be applied to perform an implicit conversion, and
+// this example requires two. First, our C-style string literal has to be converted to a
+// std::string_view (using a std::string_view converting constructor), and then our
+// std::string_view has to be converted into an Employee (using the
+// Employee(std::string_view) converting constructor).
+
+// There are two ways to make this work:
+// 1. Use a std::string_view literal:
+/*
+int main(){
+    using namespace std::literals;
+    printEmployee("Joe"sv); // now a std::string_view literal
+
+    return 0;
+}
+*/
+
+// In the snippet above, sv is a suffix that turns the string literal into a std::string_view
+// instead of a plain C-style string.
+
+// Without it, "Joe" is a const char[4] — a raw C-string literal. With the sv suffix,
+// "Joe"sv is a std::string_view object directly. That's why the using namespace
+// std::literals; line is there: the sv suffix lives in that namespace, and you have to
+// pull it in before the suffix is available. So
+/*
+"Joe" → const char[4] (C-string)
+"Joe"s → std::string
+"Joe"sv → std::string_view
+*/
+
+// 2. Explicitly construct an Employee rather than implicitly create one:
+/*
+int main()
+{
+    printEmployee(Employee{ "Joe" });
+
+    return 0;
+}
+*/
+
+// This latter example brings up a useful technique: it is trivial to convert an
+// implicit conversion into an explicit definition. 
+
+// ---------------------- When converting constructors go wrong ------------------------
+// Consider the following program:
+/*
+#include <iostream>
+
+class Dollars
+{
+private:
+    int m_dollars{};
+
+public:
+    Dollars(int d)
+        : m_dollars{ d }
+    {
+    }
+
+    int getDollars() const { return m_dollars; }
+};
+
+void print(Dollars d)
+{
+    std::cout << "$" << d.getDollars();
+}
+
+int main()
+{
+    print(5);
+
+    return 0;
+}
+*/
+
+/*
+Output:
+$5
+*/
+
+// Implicit conversion converts 5 into Foo and the program prints $5. However, maybe the user
+// actually intended to print the integer 5. It is hard to know. In these cases and especially
+// in large programs, root causing the weird behavior is difficult. Thus, It would be better
+// if our print(Dollars) function could only be called with a Dollars object, not any value
+// that can be implicitly converted to a Dollars (especially a fundamental type like int). 
+
+// ----------------------------- The explicit keyword --------------------------------------
+// To address such issues, we can use the explicit keyword to tell the compiler that a
+// constructor should not be used as a converting constructor.
+
+// Making a constructor explicit has two notable consequences:
+
+/*
+    1. An explicit constructor cannot be used to do copy initialization or copy 
+       list initialization.
+    2. An explicit constructor cannot be used to do implicit conversions (since this uses
+       copy initialization or copy list initialization).
+*/
+
+// The explicit keyword update to the code above is as follows:
+/*
+#include <iostream>
+
+class Dollars
+{
+private:
+    int m_dollars{};
+
+public:
+    explicit Dollars(int d) // now explicit
+        : m_dollars{ d }
+    {
+    }
+
+    int getDollars() const { return m_dollars; }
+};
+
+void print(Dollars d)
+{
+    std::cout << "$" << d.getDollars();
+}
+
+int main()
+{
+    print(5); // compilation error because Dollars(int) is explicit
+
+    return 0;
+}
+*/
+
+
+/*
+error: could not convert ‘5’ from ‘int’ to ‘Dollars’
+ 1018 |     print(5); // compilation error because Dollars(int) is explicit
+*/
+
+
+// Instead of print(5) we can type
+/*
+print(Dollars{5})        // correctly compiles and prints $5
+*/
+
+// What if we have an explicit constructor and want to actually print the integer 5?
+/*
+#include <iostream>
+
+class Dollars
+{
+private:
+    int m_dollars{};
+
+public:
+    explicit Dollars(int d) // now explicit
+        : m_dollars{ d }
+    {
+    }
+
+    int getDollars() const { return m_dollars; }
+};
+
+void print(Dollars d)
+{
+    std::cout << "$" << d.getDollars() << '\n';
+}
+
+int main()
+{
+    print(Dollars{5}); // good
+    print(static_cast<Dollars>(5)); // ok: static_cast will use explicit constructors
+    return 0;
+}
+*/
+// Note that static_cast returns an object that is direct-initialized, so it will consider
+// explicit constructors while performing the conversion:
+
+
+// ------------------------ Return by value and explicit constructors -----------------------
+// When we return a value from a function, if that value does not match the return type of
+// the function, an implicit conversion will occur. Just like with pass by value, such
+// conversions cannot use explicit constructors. Look at the following example.
+
+/*
+#include <iostream>
+
+class Foo
+{
+public:
+    explicit Foo() // note: explicit (just for sake of example)
+    {
+    }
+
+    explicit Foo(int x) // note: explicit
+    {
+    }
+};
+
+Foo getFoo()
+{
+    // explicit Foo() cases
+    return Foo{ };   // ok
+    return { };      // error: can't implicitly convert initializer list to Foo
+
+    // explicit Foo(int) cases
+    return 5;        // error: can't implicitly convert int to Foo
+    return Foo{ 5 }; // ok
+    return { 5 };    // error: can't implicitly convert initializer list to Foo
+}
+
+int main()
+{
+    return 0;
+}
+*/
+
+
+// ------------------------ Best practices for use of explicit ------------------------------
