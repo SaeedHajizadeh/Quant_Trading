@@ -121,3 +121,95 @@ int main() {
 // Therefore a static member function that is defined in a header file should be made
 // inline so as not to violate the One Definition Rule (ODR) if that header is then included
 // into multiple translation units.
+
+
+
+// "pure static classes" come with their downsides as well. 
+// First, because all static members are instantiated only once, there is no way to have
+// multiple copies of a pure static class (without cloning the class and renaming it).
+// Second, in the lesson on global variables, you learned that global variables are dangerous
+// because any piece of code can change the value of the global variable and end up breaking
+// another piece of seemingly unrelated code. The same holds true for pure static classes.
+// Because all of the members belong to the class (instead of object of the class), and
+// class declarations usually have global scope, a pure static class is essentially the
+// equivalent of declaring functions and global variables in a globally accessible namespace,
+// with all the requisite downsides that global variables have.
+
+
+// ------------------------ Pure static classes vs namespaces ------------------------
+// Pure static classes have a lot of overlap with namespaces. Both allow you to define
+// variables with static duration and functions within their scope region. However,
+// one significant difference is that classes have access controls while namespaces do not.
+
+// In general, a static class is a better choice than a namespace when you want to encapsulate
+// data and functions and/or need access controls. 
+
+
+// ------------------- C++ does not support static constructors or destructors -------------------
+// C++ does not support static constructors or destructors. You can either nitialize the
+// static member variable at the point of definition (even if it is private).
+/*
+#include <iostream>
+
+struct Chars{
+    char first {};
+    char second {};
+    char third {};
+    char fourth {};
+    char fifth {};
+};
+
+struct MyClass {
+    static inline Chars s_chars {'a' , 'b', 'c', 'd', 'e'}; // declare and initialize s_chars
+};
+
+int main() {
+    std::cout << MyClass::s_chars.second << '\n'; // print 'b'
+
+    return 0;
+}
+*/
+
+
+// Another way is that works with all variables, static or not, is to use a function to
+// create an object, fill it with data, and return it to the caller. This returned value
+// can be copied into the object being initialized.
+
+
+
+#include <iostream>
+
+struct Chars
+{
+    char first{};
+    char second{};
+    char third{};
+    char fourth{};
+    char fifth{};
+};
+
+class MyClass
+{
+    private:
+        static Chars generateChars() {
+            Chars c{};       // initialize all members to '\0'
+            c.first = 'a';   // initialie the members to the desired values
+            c.second = 'b';
+            c.third = 'c';
+            c.fourth = 'd';
+            c.fifth = 'e';
+
+            return c; // return the object to the caller
+        }   
+    public:
+        // copy the returned object into s_chars at the point of definition
+        static inline Chars s_chars { generateChars() }; // declare and initialize s_chars
+
+};
+
+int main()
+{
+    std::cout << MyClass::s_chars.third << std::endl; // print 'c'
+
+    return 0;
+}
